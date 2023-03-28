@@ -23,6 +23,21 @@ const Container = styled.div`
   align-items: center;
 `;
 
+const Header = styled.div`
+  width: 100%;
+  height: 30px;
+  background-color: rgba(31, 31, 31, 0.9);
+  border-radius: 10px;
+  font-family: monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 16px;
+  position: absolute;
+  top: 0%;
+  left: 0%;
+`;
+
 const Window = styled.div`
   background-color: rgba(31, 31, 31, 0.9);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
@@ -37,11 +52,7 @@ const Window = styled.div`
   max-width: 800px;
   width: 40%;
   height: 10%;
-  top: 50%; 
-  right: 50%;
-  transform: translate(20%,25%);
   position: absolute;
-  cursor: move;
 `;
 
 const InputLine = styled.div`
@@ -81,9 +92,11 @@ const CommandOutputContainer = styled.div`
 
 const CommandContainer = styled.div`
   margin-bottom: 2px;
-  margin-right: 3 px;
+  margin-right: 3px;
+  max-width: 800px;
+  padding-bottom: 3rem;
   position: absolute;
-  top: 3%;
+  top: 7%;
   left: 1%;
 `;
 
@@ -93,34 +106,8 @@ type TerminalLine = {
 };
 
 export default function Home() {
-  const [isDragging, setIsDragging] = useState(false);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-
   const [inputValue, setInputValue] = useState("");
   const [terminalOutput, setTerminalOutput] = useState<Array<TerminalLine>>([]);
-
-  // window moving
-  const handleMouseDown = (event) => {
-    setIsDragging(true);
-    setOffset({
-      x: event.clientX - position.x,
-      y: event.clientY - position.y,
-    });
-  };
-
-  const handleMouseMove = (event) => {
-    if (isDragging) {
-      setPosition({
-        x: event.clientX - offset.x,
-        y: event.clientY - offset.y,
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
 
   //command handling
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -129,7 +116,7 @@ export default function Home() {
       let output: Array<string> = [];
       switch (command) {
         case "help":
-          output = ["Supported commands:", "- help", "- clear", "- work exp"];
+          output = ["Supported commands:", "- help", "- clear", "- work exp", "- github", "- contacts", "- stack", "- for HR"];
           break;
         case "work exp":
           output = ["SBDA Group, December 2020 - Now", 
@@ -156,10 +143,20 @@ export default function Home() {
           setInputValue("");
           return;
         case "github":
-          output = ["https://github.com/vicolby"]
+          window.open('https://github.com/vicolby', '_blank');
+          output = ["Redirected to github"]
+          break
+        case "contacts":
+          output = ["Telegram: @vicolby", "Phone: 77073421432", "Mail: gimmefear@gmail.com"]
+          break
+        case "for hr":
+          window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+          break
+        case "stack":
+          output = ["Python, Golang", "Docker, Kubernetes, Terraform, Helm, Yandex Cloud"];
           break
         default:
-          output = [`Unknown command: ${command} \n`, "Supported commands:", "- help", "- clear", "- work exp"];
+          output = [`Unknown command: ${command} \n`, "Supported commands:", "- help", "- clear", "- work exp", "- github", "- contacts", "- stack", "- for HR"];
       }
       setTerminalOutput([...terminalOutput, { command, output }]);
       setInputValue("");
@@ -169,11 +166,9 @@ export default function Home() {
   return (
     <>
       <GlobalStyle />
-      <Container onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
-        <Window
-          onMouseDown={handleMouseDown}
-          style={{ left: position.x, top: position.y }}
-        >
+      <Container>
+        <Window>
+          <Header>Viktor Sukhanov</Header>
           <CommandContainer>
             {terminalOutput.map((line, index) => (
             <CommandOutputContainer key={index}>
