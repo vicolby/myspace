@@ -1,7 +1,6 @@
+import { useState } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import reset from "styled-reset";
-import { FaGithub } from "react-icons/fa";
-import { useRef, useState, useEffect } from "react";
 
 const GlobalStyle = createGlobalStyle`
   ${reset}
@@ -9,105 +8,144 @@ const GlobalStyle = createGlobalStyle`
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    background: linear-gradient(to bottom, rgba(38, 38, 38, 0.7), rgba(25, 25, 25, 0.7)), url('/wxp.jpeg');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
   }
 `;
 
 const Container = styled.div`
-  background-color: black;
   min-height: 100vh;
   width: 100%;
   display: flex;
-  padding: 2rem;
+  justify-content: center;
+  align-items: center;
+`;
+
+const Window = styled.div`
+  background-color: rgba(31, 31, 31, 0.9);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  font-family: monospace;
+  color: white;
+  border-radius: 10px;
+  overflow-y: auto;
+  padding: 16rem;
+  display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
-`;
-
-const GithubLink = styled.a`
+  max-width: 800px;
+  width: 40%;
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  color: white;
-  font-size: 1.5rem;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: move;
 `;
 
-const CardContainer = styled.div`
+const InputLine = styled.div`
   display: flex;
-  overflow-x: auto;
-  overflow-y: hidden;
-  width: 100%;
-  gap: 1rem;
-  -ms-overflow-style: none; 
-  scrollbar-width: none;
 
-  &::-webkit-scrollbar {
-    display: none;
+`;
+
+const InputPrefix = styled.span`
+  color: green;
+  margin-right: 5px;
+`;
+
+const Input = styled.input`
+  border: none;
+  background-color: transparent;
+  font-family: monospace;
+  color: white;
+  outline: none;
+  flex-grow: 1;
+  &:focus {
+    outline: none;
   }
 `;
 
-const Card = styled.div`
-  background-color: lightgray;
-  padding: 1rem;
-  border-radius: 5px;
-  min-width: 500px;
-  min-height: 200px;
-  cursor: pointer;
-`;
+type TerminalLine = {
+  command: string;
+  output: Array<string>;
+};
 
 export default function Home() {
-  const [cards, setCards] = useState(["Card 1", "Card 2", "Card 3", "Card 4", "Card 5"]);
-  const cardContainerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
 
-  const handleScroll = () => {
-    if (!cardContainerRef.current) return;
-  
-    const cardWidth = cardContainerRef.current.firstChild?.clientWidth || 0;
-    const scrollLeft = cardContainerRef.current.scrollLeft;
-  
-    if (scrollLeft >= cardWidth) {
-      setCards((prevCards) => {
-        const newCards = [...prevCards.slice(1), prevCards[0]];
-        return newCards;
+  const [inputValue, setInputValue] = useState("");
+  const [terminalOutput, setTerminalOutput] = useState<Array<TerminalLine>>([]);
+
+  // window moving
+  const handleMouseDown = (event) => {
+    setIsDragging(true);
+    setOffset({
+      x: event.clientX - position.x,
+      y: event.clientY - position.y,
+    });
+  };
+
+  const handleMouseMove = (event) => {
+    if (isDragging) {
+      setPosition({
+        x: event.clientX - offset.x,
+        y: event.clientY - offset.y,
       });
-  
-      cardContainerRef.current.scrollLeft = scrollLeft - cardWidth;
-    } else if (scrollLeft === 0) {
-      setCards((prevCards) => {
-        const newCards = [prevCards[prevCards.length - 1], ...prevCards.slice(0, -1)];
-        return newCards;
-      });
-  
-      cardContainerRef.current.scrollLeft = cardWidth;
     }
   };
 
-  useEffect(() => {
-    if (cardContainerRef.current) {
-      cardContainerRef.current.addEventListener("scroll", handleScroll);
-    }
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
 
-    return () => {
-      if (cardContainerRef.current) {
-        cardContainerRef.current.removeEventListener("scroll", handleScroll);
+  //command handling
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      const command = inputValue.trim().toLowerCase();
+      let output: Array<string> = [];
+      switch (command) {
+        case "help":
+          output = ["Supported commands:", "- help", "- clear"];
+          break;
+        case "clear":
+          setTerminalOutput([]);
+          setInputValue("");
+          return;
+        default:
+          output = [`Unknown command: ${command}`];
       }
-    };
-  }, []);
+      setTerminalOutput([...terminalOutput, { command, output }]);
+      setInputValue("");
+    }
+  };
 
   return (
     <>
       <GlobalStyle />
-      <Container>
-        <GithubLink href="https://github.com/vicolby" target="_blank">
-          <FaGithub />
-        </GithubLink>
-        <CardContainer ref={cardContainerRef}>
-          {cards.map((card, index) => (
-            <Card key={index} onClick={() => alert(`${card} clicked!`)}>
-              {card}
-            </Card>
+      <Container onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
+        <Window
+          onMouseDown={handleMouseDown}
+          style={{ left: position.x, top: position.y }}
+        >
+          {terminalOutput.map((line, index) => (
+          <div key={index}>
+            <div>${line.command}</div>
+            {line.output.map((outputLine, outputIndex) => (
+              <div key={outputIndex}>{outputLine}</div>
+            ))}
+          </div>
           ))}
-        </CardContainer>
+          <InputLine>
+          <InputPrefix>➜</InputPrefix>
+            <Input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+            />
+          </InputLine>
+        </Window>
       </Container>
     </>
   );
