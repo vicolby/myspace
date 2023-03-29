@@ -147,7 +147,7 @@ export default function Home() {
           output = ["Redirected to github"]
           break
         case "contacts":
-          output = ["Telegram: @vi_colby", "Phone: 77073421432", "Mail: gimmefear@gmail.com"]
+          output = ["Telegram: @vi_colby", "Mail: gimmefear@gmail.com"]
           break
         case "for hr":
           window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
